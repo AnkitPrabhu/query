@@ -36,7 +36,6 @@ type Visitor interface {
 	VisitDropIndex(stmt *DropIndex) (interface{}, error)
 	VisitAlterIndex(stmt *AlterIndex) (interface{}, error)
 	VisitBuildIndexes(stmt *BuildIndexes) (interface{}, error)
-
 	/*
 	   Visitor for ROLES statements.
 	*/

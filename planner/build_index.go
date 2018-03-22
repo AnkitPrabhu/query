@@ -88,7 +88,6 @@ func (this *builder) VisitCreateIndex(stmt *algebra.CreateIndex) (interface{}, e
 
 	return plan.NewCreateIndex(keyspace, stmt), nil
 }
-
 func (this *builder) VisitDropIndex(stmt *algebra.DropIndex) (interface{}, error) {
 	ksref := stmt.Keyspace()
 	keyspace, err := this.getNameKeyspace(ksref.Namespace(), ksref.Keyspace())

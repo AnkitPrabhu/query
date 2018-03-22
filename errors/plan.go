@@ -119,10 +119,16 @@ func NewIndexAlreadyExistsError(idx string) Error {
 }
 
 const AMBIGUOUS_META = 4310
+const AMBIGUOUS_VIEW = 9999
 
 func NewAmbiguousMetaError() Error {
 	return &err{level: EXCEPTION, ICode: AMBIGUOUS_META, IKey: "plan.ambiguous_meta",
 		InternalMsg: fmt.Sprintf("META() in query with multiple FROM terms requires an argument."), InternalCaller: CallerN(1)}
+}
+
+func NewAmbiguousViewsError() Error {
+	return &err{level: EXCEPTION, ICode: AMBIGUOUS_VIEW, IKey: "plan.ambiguous_view",
+		InternalMsg: fmt.Sprintf("VIEWS() in query with multiple FROM terms requires an argument."), InternalCaller: CallerN(1)}
 }
 
 const NOT_SUPPORTED_DESC_COLLATION = 4320

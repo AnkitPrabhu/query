@@ -277,7 +277,17 @@ func (this *Formalizer) VisitFunction(expr Function) (interface{}, error) {
 				keyspaceIdent.SetKeyspaceAlias(true)
 				return NewMeta(keyspaceIdent), nil
 			} else {
+
 				return nil, errors.NewAmbiguousMetaError()
+			}
+		}
+		view, ok := expr.(*Views)
+		if ok && len(view.Operands()) == 0 {
+			if this.keyspace != "" {
+				return NewViews(), nil
+			} else {
+
+				return nil, errors.NewAmbiguousViewsError()
 			}
 		}
 	}

@@ -609,7 +609,7 @@ func (this *Server) getPrepared(request Request, namespace string) (*plan.Prepar
 			namedArgs = nil
 			positionalArgs = nil
 		}
-
+		logging.Infof("STMT IS %v",stmt)
 		prepared, err = planner.BuildPrepared(stmt, this.datastore, this.systemstore, namespace, false,
 			namedArgs, positionalArgs, request.IndexApiVersion(), request.FeatureControls())
 		request.Output().AddPhaseTime(execution.PLAN, time.Since(prep))
@@ -638,6 +638,7 @@ func (this *Server) getPrepared(request Request, namespace string) (*plan.Prepar
 				// when executing prepared statements, we set the type to that
 				// of the prepared statement
 				request.SetType(prepared.Type())
+				logging.Infof(prepared.Type())
 			} else {
 
 				// this never happens, but for completeness

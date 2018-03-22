@@ -389,7 +389,7 @@ tokOffset	 int
 %type <indexKeyTerm>     index_term
 %type <indexKeyTerms>    index_terms
 %type <expr>             expr_input all_expr
-
+%type <s>		funcName
 %type <inferenceType>    opt_infer_using
 %type <val>              infer_with opt_infer_with
 
@@ -1970,8 +1970,10 @@ CREATE INDEX index_name ON named_keyspace_ref LPAREN index_terms RPAREN index_pa
 {
     $$ = algebra.NewCreateIndex($3, $5, $7, $9, $10, $11, $12)
 }
-;
 
+funcName:
+IDENT
+;
 opt_primary_name:
 /* empty */
 {
