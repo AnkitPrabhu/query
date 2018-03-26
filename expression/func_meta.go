@@ -14,6 +14,7 @@ import (
 
 	"github.com/couchbase/query/util"
 	"github.com/couchbase/query/value"
+	"log"
 )
 
 ///////////////////////////////////////////////////
@@ -191,6 +192,7 @@ func (this *Meta) Indexable() bool {
 }
 
 func (this *Meta) CoveredBy(keyspace string, exprs Expressions, options coveredOptions) Covered {
+	log.Printf("DBG: func_meta Entering CoveredBy")
 	if len(this.operands) > 0 {
 		alias := NewIdentifier(keyspace)
 		if !this.operands[0].DependsOn(alias) {

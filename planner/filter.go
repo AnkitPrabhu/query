@@ -15,6 +15,7 @@ import (
 	"github.com/couchbase/query/datastore"
 	"github.com/couchbase/query/errors"
 	"github.com/couchbase/query/expression"
+	"log"
 )
 
 const (
@@ -82,38 +83,51 @@ func combineFilters(baseKeyspace *baseKeyspace, includeOnclause bool) error {
 	var predHasOr, onHasOr bool
 	var dnfPred, origPred, onclause expression.Expression
 
-	for _, fl := range baseKeyspace.filters {
+	log.Printf("RGB: combineFilters (SPL)\n baseKeyspace:%v\n includeOnClause:%v",
+		baseKeyspace, includeOnclause)
+
+	for i, fl := range baseKeyspace.filters {
+		log.Printf("RGB: combineFilters (SPL)\n <%d> fl=%v", i, fl.fltrExpr)
 		if fl.isOnclause() {
 			if onclause == nil {
 				onclause = fl.fltrExpr
+				log.Printf("RGB: combineFilters (SPL)\n <%d> fl=%v fl.isOnClause=true, onClause was nil, is now %v", i, fl.fltrExpr, onclause)
 			} else {
 				onclause = expression.NewAnd(onclause, fl.fltrExpr)
+				log.Printf("RGB: combineFilters (SPL)\n <%d> fl=%v fl.isOnClause=true, onClause was NOT nil, is now %v", i, fl.fltrExpr, onclause)
 			}
 
 			if _, ok := fl.fltrExpr.(*expression.Or); ok {
+				log.Printf("RGB: combineFilters (SPL)\n <%d> fl=%v onHasOr=true", i, fl.fltrExpr)
 				onHasOr = true
 			}
 
 			if !includeOnclause {
+				log.Printf("RGB: combineFilters (SPL)\n <%d> fl=%v !includeOnClause", i, fl.fltrExpr)
 				continue
 			}
 		}
 
 		if dnfPred == nil {
 			dnfPred = fl.fltrExpr
+			log.Printf("RGB: combineFilters (SPL)\n <%d> fl=%v dnfPred was nil, is now %v", i, fl.fltrExpr, dnfPred)
 		} else {
 			dnfPred = expression.NewAnd(dnfPred, fl.fltrExpr)
+			log.Printf("RGB: combineFilters (SPL)\n <%d> fl=%v dnfPred was NOT nil, is now %v", i, fl.fltrExpr, dnfPred)
 		}
 
 		if fl.origExpr != nil {
 			if origPred == nil {
 				origPred = fl.origExpr
+				log.Printf("RGB: combineFilters (SPL)\n <%d> fl=%v origExpr != nil, origPred == nil, so origPred = %v", i, fl.fltrExpr, origPred)
 			} else {
 				origPred = expression.NewAnd(origPred, fl.origExpr)
+				log.Printf("RGB: combineFilters (SPL)\n <%d> fl=%v origExpr != nil, origPred != nil, so origPred = %v", i, fl, origPred)
 			}
 		}
 
 		if _, ok := fl.fltrExpr.(*expression.Or); ok {
+			log.Printf("RGB: combineFilters (SPL)\n <%d> fl=%v predHasOr=true", i, fl.fltrExpr)
 			predHasOr = true
 		}
 	}
@@ -121,6 +135,7 @@ func combineFilters(baseKeyspace *baseKeyspace, includeOnclause bool) error {
 	if predHasOr {
 		dnf := NewDNF(dnfPred.Copy(), true, true)
 		dnfPred, err = dnf.Map(dnfPred)
+		log.Printf("predHasOr=true, dnfPred=%v", dnfPred)
 		if err != nil {
 			return err
 		}
@@ -129,6 +144,7 @@ func combineFilters(baseKeyspace *baseKeyspace, includeOnclause bool) error {
 	if onHasOr {
 		dnf := NewDNF(onclause.Copy(), true, true)
 		onclause, err = dnf.Map(onclause)
+		log.Printf("onHasOr=true, dnfPred=%v", dnfPred)
 		if err != nil {
 			return err
 		}

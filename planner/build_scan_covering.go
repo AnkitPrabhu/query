@@ -22,7 +22,6 @@ import (
 func (this *builder) buildCoveringScan(indexes map[datastore.Index]*indexEntry,
 	node *algebra.KeyspaceTerm, baseKeyspace *baseKeyspace,
 	id expression.Expression) (plan.SecondaryScan, int, error) {
-
 	if this.cover == nil {
 		return nil, 0, nil
 	}

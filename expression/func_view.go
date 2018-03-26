@@ -10,6 +10,8 @@
 package expression
 
 import (
+	"log"
+
 	"github.com/couchbase/query/value"
 )
 
@@ -24,12 +26,12 @@ This represents the Meta function Views().
 It instructs GSI to use JSEvaluator.
 */
 type Views struct {
-	NullaryFunctionBase
+	FunctionBase
 }
 
-func NewViews() Function {
+func NewViews(operands ...Expression) Function {
 	rv := &Views{
-		*NewNullaryFunctionBase("views"),
+		*NewFunctionBase("views", operands...),
 	}
 
 	rv.expr = rv
@@ -47,31 +49,59 @@ func (this *Views) Type() value.Type { return value.OBJECT }
 
 /*
 Dummy function for Views
-*/
+
 func (this *Views) Evaluate(item value.Value, context Context) (value.Value, error) {
 	return value.NULL_VALUE, nil
 }
-
+*/
 func (this *Views) Indexable() bool {
 	return true
 }
 
+func (this *Views) Evaluate(item value.Value, context Context) (value.Value, error) {
+	val := item
+
+	if len(this.operands) > 0 {
+		arg, err := this.operands[0].Evaluate(item, context)
+		if err != nil {
+			return nil, err
+		}
+
+		val = arg
+	}
+
+	if val.Type() == value.MISSING {
+		return val, nil
+	}
+
+	switch val := val.(type) {
+	case value.AnnotatedValue:
+		return value.NewValue(val.GetAttachment("meta")), nil
+	default:
+		return value.NULL_VALUE, nil
+	}
+}
+
 func (this *Views) CoveredBy(keyspace string, exprs Expressions, options coveredOptions) Covered {
+	log.Printf("DBG: CoveredBy, keyspace: %s \n exprs:%v \n options:%v \n operands:%v", keyspace, exprs, options, this.operands)
 	if len(this.operands) > 0 {
 		alias := NewIdentifier(keyspace)
 		if !this.operands[0].DependsOn(alias) {
 
 			// MB-22561: skip the rest of the expression if different keyspace
+			log.Printf("DBG: CoveredBy returning CoveredSkip")
 			return CoveredSkip
 		}
 	}
 
 	for _, expr := range exprs {
 		if this.EquivalentTo(expr) {
+			log.Printf("DBG: CoveredBy returning CoveredTrue")
 			return CoveredTrue
 		}
 	}
 
+	log.Printf("DBG: CoveredBy returning CoveredFalse")
 	return CoveredFalse
 }
 
@@ -83,7 +113,5 @@ func (this *Views) MaxArgs() int { return 0 }
 Factory method pattern.
 */
 func (this *Views) Constructor() FunctionConstructor {
-	return func(operands ...Expression) Function {
-		return NewViews()
-	}
+	return NewViews
 }

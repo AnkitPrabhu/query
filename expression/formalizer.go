@@ -284,7 +284,9 @@ func (this *Formalizer) VisitFunction(expr Function) (interface{}, error) {
 		view, ok := expr.(*Views)
 		if ok && len(view.Operands()) == 0 {
 			if this.keyspace != "" {
-				return NewViews(), nil
+				keyspaceIdent := NewIdentifier(this.keyspace)
+				keyspaceIdent.SetKeyspaceAlias(true)
+				return NewViews(keyspaceIdent), nil
 			} else {
 
 				return nil, errors.NewAmbiguousViewsError()

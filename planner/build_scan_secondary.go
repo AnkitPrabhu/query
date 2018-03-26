@@ -19,11 +19,14 @@ import (
 	"github.com/couchbase/query/logging"
 	"github.com/couchbase/query/plan"
 	"github.com/couchbase/query/value"
+	"log"
 )
 
 func (this *builder) buildSecondaryScan(indexes map[datastore.Index]*indexEntry,
 	node *algebra.KeyspaceTerm, baseKeyspace *baseKeyspace, id expression.Expression) (
 	plan.SecondaryScan, int, error) {
+
+	log.Printf("RGB: buildSecondaryScan\n this.cover:%v", this.cover)
 
 	if this.cover != nil && !node.IsAnsiNest() {
 		scan, sargLength, err := this.buildCoveringScan(indexes, node, baseKeyspace, id)

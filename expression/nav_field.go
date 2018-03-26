@@ -12,6 +12,8 @@ package expression
 import (
 	"strings"
 
+	_ "runtime/debug"
+
 	"github.com/couchbase/query/value"
 )
 
@@ -88,6 +90,9 @@ func (this *Field) EquivalentTo(other Expression) bool {
 }
 
 func (this *Field) CoveredBy(keyspace string, exprs Expressions, options coveredOptions) Covered {
+	//log.Printf("DBG: nav_field CoveredBy keyspace: %s, exprs: %v, options: %v", keyspace, exprs, options)
+	//debug.PrintStack()
+	//log.Printf("DBG: nav_field CoveredBy printed stack")
 	for _, expr := range exprs {
 
 		// MB-25560: if a field is equivalent, no need to check children field / field names
@@ -96,6 +101,7 @@ func (this *Field) CoveredBy(keyspace string, exprs Expressions, options covered
 		}
 	}
 	children := this.expr.Children()
+	//log.Printf("DBG: nav_field, expr: %v, Children: %v", this.expr, children)
 	options.isSingle = len(children) == 1
 	trickleEquiv := options.trickleEquiv
 	options.trickleEquiv = true

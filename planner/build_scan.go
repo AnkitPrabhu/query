@@ -11,6 +11,8 @@ package planner
 
 import (
 	"fmt"
+	"log"
+	_ "runtime/debug"
 
 	"github.com/couchbase/query/algebra"
 	"github.com/couchbase/query/datastore"
@@ -36,6 +38,11 @@ func (this *builder) selectScan(keyspace datastore.Keyspace, node *algebra.Keysp
 	}
 
 	secondary, primary, err := this.buildScan(keyspace, node)
+
+	//log.Printf("RGB: selectScan\n ===== STACK =====")
+	//debug.PrintStack()
+	//log.Printf("RGB: selectScan\n ===== !STACK =====")
+
 	if err != nil {
 		return nil, err
 	}
@@ -52,6 +59,7 @@ func (this *builder) selectScan(keyspace datastore.Keyspace, node *algebra.Keysp
 func (this *builder) buildScan(keyspace datastore.Keyspace, node *algebra.KeyspaceTerm) (
 	secondary plan.Operator, primary plan.Operator, err error) {
 
+	log.Printf("RGB: buildScan\n keyspace:%v\n node:%v\n secondary:%v\n primary:%v", keyspace, node, secondary, primary)
 	join := node.IsAnsiJoinOp()
 	hash := node.IsUnderHash()
 
@@ -81,9 +89,13 @@ func (this *builder) buildScan(keyspace datastore.Keyspace, node *algebra.Keyspa
 		}
 	}
 
+	log.Printf("RGB: buildScan\n pred:%v\n pred2:%v\n baseKeyspace:%v", pred, pred2, baseKeyspace)
+
 	id := expression.NewField(
 		expression.NewMeta(expression.NewIdentifier(node.Alias())),
 		expression.NewFieldName("id", false))
+
+	log.Printf("RGB: buildScan SPL-1\n this.cover: %v\n baseKeyspace.dnfPred: %v", this.cover, baseKeyspace.dnfPred)
 
 	if pred != nil || pred2 != nil {
 		// for ANSI JOIN, the following process is already done for ON clause filters
@@ -96,12 +108,19 @@ func (this *builder) buildScan(keyspace datastore.Keyspace, node *algebra.Keyspa
 				}
 			}
 
+			log.Printf("RGB: buildScan SPL-3\n this.cover: %v\n baseKeyspace.dnfPred: %v", this.cover, baseKeyspace.dnfPred)
+
 			// include pushed ON-clause filter
 			err = combineFilters(baseKeyspace, true)
+
+			log.Printf("RGB: buildScan SPL-4\n this.cover: %v\n baseKeyspace.dnfPred: %v", this.cover, baseKeyspace.dnfPred)
+
 			if err != nil {
 				return nil, nil, err
 			}
 		}
+
+		log.Printf("RGB: buildScan SPL-2\n this.cover: %v\n baseKeyspace.dnfPred: %v", this.cover, baseKeyspace.dnfPred)
 
 		if baseKeyspace.dnfPred != nil {
 			if baseKeyspace.origPred == nil {
@@ -233,6 +252,9 @@ func (this *builder) buildTermScan(node *algebra.KeyspaceTerm,
 
 	join := node.IsAnsiJoinOp()
 
+	log.Printf("RGB: buildTermScan\n node:%v\n baseKeyspace:%v\n id:%v\n indexes:%v\n primaryKey:%v\n formalizer:%v\n sargLength:%v",
+		node, baseKeyspace, id, indexes, primaryKey, formalizer, secondary, sargLength)
+
 	var scanbuf [4]plan.SecondaryScan
 	scans := scanbuf[0:1]
 
@@ -255,6 +277,9 @@ func (this *builder) buildTermScan(node *algebra.KeyspaceTerm,
 	}
 
 	minimals := minimalIndexes(sargables, false, pred)
+
+	log.Printf("RGB: buildTermScan\n sargables:%v\n all:%v\n arrays:%v\n minimals:%v\n,",
+		sargables, all, arrays, minimals)
 
 	indexPushDowns := this.storeIndexPushDowns()
 	defer func() {
